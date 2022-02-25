@@ -1,8 +1,8 @@
 #!/bin/bash
 set -e
 
-
 # Setup
+echo Starting Setup
 cp -n docker-compose.onpremise.yml docker-compose.yml
 if [ ! -d ./configuration ]; then #create configuration folder
   cp -nR ./default-configuration ./configuration
@@ -29,11 +29,26 @@ for folder in "${data_folders[@]}"; do #create mounted folders
   fi
 done
 
-
 # Run
 docker-compose pull
+
 docker-compose up -d scylladb rabbitmq
-sleep 5m #Wait scylladb to startup
+echo Wait for scylladb to startup
+secs=$((5 * 60))
+while [ $secs -gt 0 ]; do
+   echo -ne "$secs\033[0K\r"
+   sleep 1
+   : $((secs--))
+done
+
 docker-compose up -d php
-sleep 10m #Wait php to create tables in scylladb
+echo Wait for PHP to create tables in scylladb
+secs=$((10 * 60))
+while [ $secs -gt 0 ]; do
+   echo -ne "$secs\033[0K\r"
+   sleep 1
+   : $((secs--))
+done
+
 docker-compose up -d
+echo Finished
